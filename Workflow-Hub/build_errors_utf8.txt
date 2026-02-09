@@ -1,0 +1,108 @@
+﻿
+> taskflow@0.0.0 build
+> tsc -b && vite build
+
+src/components/FormBuilder/FieldPropertyEditor.tsx(4,48): error TS6133: 'Divider' is declared but its value is never read.
+src/components/FormBuilder/FieldPropertyEditor.tsx(5,25): error TS6133: 'FormControl' is declared but its value is never read.
+src/components/FormBuilder/FieldPropertyEditor.tsx(5,38): error TS6133: 'InputLabel' is declared but its value is never read.
+src/components/FormBuilder/FieldPropertyEditor.tsx(7,55): error TS6133: 'Chip' is declared but its value is never read.
+src/components/FormBuilder/PropertyEditor.tsx(10,42): error TS2305: Module '"../../types"' has no exported member 'Actor'.
+src/components/FormBuilder/PropertyEditor.tsx(21,26): error TS2322: Type 'string' is not assignable to type 'Stage'.
+src/components/FormBuilder/PropertyEditor.tsx(21,35): error TS2322: Type 'string' is not assignable to type 'Stage'.
+src/components/FormBuilder/PropertyEditor.tsx(21,48): error TS2322: Type 'string' is not assignable to type 'Stage'.
+src/components/FormBuilder/PropertyEditor.tsx(21,61): error TS2322: Type 'string' is not assignable to type 'Stage'.
+src/components/FormBuilder/PropertyEditor.tsx(21,74): error TS2322: Type 'string' is not assignable to type 'Stage'.
+src/components/FormBuilder/PropertyEditor.tsx(21,87): error TS2322: Type 'string' is not assignable to type 'Stage'.
+src/components/FormBuilder/PropertyEditor.tsx(174,46): error TS2769: No overload matches this call.
+  Overload 2 of 2, '(props: DefaultComponentProps<ChipTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type 'Stage' is not assignable to type 'Key | null | undefined'.
+  Overload 2 of 2, '(props: DefaultComponentProps<ChipTypeMap<{}, "div">>): Element | null', gave the following error.
+    Type 'Stage' is not assignable to type 'ReactNode'.
+src/components/FormBuilder/PropertyEditor.tsx(179,89): error TS2345: Argument of type 'Stage' is not assignable to parameter of type 'string'.
+src/components/FormRenderer/FormRenderer.tsx(7,5): error TS6133: 'FormControl' is declared but its value is never read.
+src/components/FormRenderer/FormRenderer.tsx(7,18): error TS6133: 'InputLabel' is declared but its value is never read.
+src/components/FormRenderer/FormRenderer.tsx(7,30): error TS6133: 'Select' is declared but its value is never read.
+src/components/FormRenderer/FormRenderer.tsx(8,23): error TS6133: 'RadioGroup' is declared but its value is never read.
+src/components/FormRenderer/FormRenderer.tsx(8,35): error TS6133: 'Radio' is declared but its value is never read.
+src/components/FormRenderer/FormRenderer.tsx(8,42): error TS6133: 'FormHelperText' is declared but its value is never read.
+src/hooks/useFormVisibility.ts(2,22): error TS2305: Module '"../types"' has no exported member 'Actor'.
+src/hooks/useFormVisibility.ts(3,38): error TS2307: Cannot find module '../utils/visibility' or its corresponding type declarations.
+src/pages/DashboardPage.tsx(3,59): error TS6133: 'IconButton' is declared but its value is never read.
+src/pages/DashboardPage.tsx(9,21): error TS6133: 'ChevronRightIcon' is declared but its value is never read.
+src/pages/DirectoryPage.tsx(17,1): error TS6192: All imports in import declaration are unused.
+src/pages/forms/FormBuilderPage.tsx(2,27): error TS6133: 'useMemo' is declared but its value is never read.
+src/pages/forms/FormBuilderPage.tsx(6,5): error TS6133: 'Tab' is declared but its value is never read.
+src/pages/forms/FormBuilderPage.tsx(6,10): error TS6133: 'Tabs' is declared but its value is never read.
+src/pages/forms/FormBuilderPage.tsx(6,22): error TS6133: 'Chip' is declared but its value is never read.
+src/pages/forms/FormBuilderPage.tsx(11,12): error TS6133: 'AddIcon' is declared but its value is never read.
+src/pages/forms/FormBuilderPage.tsx(12,17): error TS6133: 'SettingsIcon' is declared but its value is never read.
+src/pages/forms/FormBuilderPage.tsx(19,1): error TS6192: All imports in import declaration are unused.
+src/pages/forms/FormBuilderPage.tsx(19,10): error TS1484: 'Form' is a type and must be imported using a type-only import when 'verbatimModuleSyntax' is enabled.
+src/pages/forms/FormBuilderPage.tsx(19,16): error TS1484: 'Section' is a type and must be imported using a type-only import when 'verbatimModuleSyntax' is enabled.
+src/pages/forms/FormBuilderPage.tsx(19,25): error TS1484: 'Field' is a type and must be imported using a type-only import when 'verbatimModuleSyntax' is enabled.
+src/pages/forms/FormBuilderPage.tsx(19,32): error TS1484: 'FieldType' is a type and must be imported using a type-only import when 'verbatimModuleSyntax' is enabled.
+src/pages/forms/FormBuilderPage.tsx(34,12): error TS6133: 'activeTab' is declared but its value is never read.
+src/pages/forms/FormBuilderPage.tsx(34,23): error TS6133: 'setActiveTab' is declared but its value is never read.
+src/pages/processes/ProcessBuilderPage.tsx(6,41): error TS1484: 'SelectChangeEvent' is a type and must be imported using a type-only import when 'verbatimModuleSyntax' is enabled.
+src/pages/processes/ProcessBuilderPage.tsx(7,5): error TS6133: 'Alert' is declared but its value is never read.
+src/pages/processes/ProcessBuilderPage.tsx(7,12): error TS6133: 'List' is declared but its value is never read.
+src/pages/processes/ProcessBuilderPage.tsx(7,18): error TS6133: 'ListItem' is declared but its value is never read.
+src/pages/processes/ProcessBuilderPage.tsx(7,28): error TS6133: 'ListItemText' is declared but its value is never read.
+src/pages/processes/ProcessBuilderPage.tsx(7,42): error TS6133: 'ListItemSecondaryAction' is declared but its value is never read.
+src/pages/processes/ProcessBuilderPage.tsx(16,17): error TS6133: 'DeptIcon' is declared but its value is never read.
+src/pages/processes/ProcessBuilderPage.tsx(17,13): error TS6133: 'RoleIcon' is declared but its value is never read.
+src/pages/processes/ProcessBuilderPage.tsx(22,10): error TS1484: 'Process' is a type and must be imported using a type-only import when 'verbatimModuleSyntax' is enabled.
+src/pages/processes/ProcessBuilderPage.tsx(22,10): error TS6133: 'Process' is declared but its value is never read.
+src/pages/processes/ProcessBuilderPage.tsx(22,19): error TS1484: 'Stage' is a type and must be imported using a type-only import when 'verbatimModuleSyntax' is enabled.
+src/pages/processes/ProcessBuilderPage.tsx(22,26): error TS1484: 'ApproverSelector' is a type and must be imported using a type-only import when 'verbatimModuleSyntax' is enabled.
+src/pages/processes/ProcessBuilderPage.tsx(22,44): error TS1484: 'ApproverSelectorType' is a type and must be imported using a type-only import when 'verbatimModuleSyntax' is enabled.
+src/pages/processes/ProcessBuilderPage.tsx(32,5): error TS1484: 'DragEndEvent' is a type and must be imported using a type-only import when 'verbatimModuleSyntax' is enabled.
+src/pages/processes/ProcessBuilderPage.tsx(120,54): error TS2322: Type 'string[]' is not assignable to type 'string'.
+src/pages/processes/ProcessBuilderPage.tsx(121,45): error TS2322: Type '(e: SelectChangeEvent<string[]>) => void' is not assignable to type '(event: ChangeEvent<Omit<HTMLInputElement, "value"> & { value: string; }, Element> | (Event & { target: { value: string; name: string; }; }), child: ReactNode) => void'.
+  Types of parameters 'e' and 'event' are incompatible.
+    Type 'ChangeEvent<Omit<HTMLInputElement, "value"> & { value: string; }, Element> | (Event & { target: { value: string; name: string; }; })' is not assignable to type 'ChangeEvent<HTMLInputElement, Element> | (Event & { target: { value: string[]; name: string; }; })'.
+      Type 'Event & { target: { value: string; name: string; }; }' is not assignable to type 'ChangeEvent<HTMLInputElement, Element> | (Event & { target: { value: string[]; name: string; }; })'.
+        Type 'Event & { target: { value: string; name: string; }; }' is not assignable to type 'Event & { target: { value: string[]; name: string; }; }'.
+          Type 'Event & { target: { value: string; name: string; }; }' is not assignable to type '{ target: { value: string[]; name: string; }; }'.
+            The types of 'target.value' are incompatible between these types.
+              Type 'string' is not assignable to type 'string[]'.
+src/pages/processes/ProcessBuilderPage.tsx(124,63): error TS2339: Property 'map' does not exist on type 'string'.
+src/pages/processes/ProcessBuilderPage.tsx(124,67): error TS7006: Parameter 'id' implicitly has an 'any' type.
+src/pages/processes/ProcessBuilderPage.tsx(137,54): error TS2322: Type 'string[]' is not assignable to type 'string'.
+src/pages/processes/ProcessBuilderPage.tsx(138,45): error TS2322: Type '(e: SelectChangeEvent<string[]>) => void' is not assignable to type '(event: ChangeEvent<Omit<HTMLInputElement, "value"> & { value: string; }, Element> | (Event & { target: { value: string; name: string; }; }), child: ReactNode) => void'.
+  Types of parameters 'e' and 'event' are incompatible.
+    Type 'ChangeEvent<Omit<HTMLInputElement, "value"> & { value: string; }, Element> | (Event & { target: { value: string; name: string; }; })' is not assignable to type 'ChangeEvent<HTMLInputElement, Element> | (Event & { target: { value: string[]; name: string; }; })'.
+      Type 'Event & { target: { value: string; name: string; }; }' is not assignable to type 'ChangeEvent<HTMLInputElement, Element> | (Event & { target: { value: string[]; name: string; }; })'.
+        Type 'Event & { target: { value: string; name: string; }; }' is not assignable to type 'Event & { target: { value: string[]; name: string; }; }'.
+          Type 'Event & { target: { value: string; name: string; }; }' is not assignable to type '{ target: { value: string[]; name: string; }; }'.
+            The types of 'target.value' are incompatible between these types.
+              Type 'string' is not assignable to type 'string[]'.
+src/pages/processes/ProcessBuilderPage.tsx(141,63): error TS2339: Property 'map' does not exist on type 'string'.
+src/pages/processes/ProcessBuilderPage.tsx(141,67): error TS7006: Parameter 'id' implicitly has an 'any' type.
+src/pages/processes/ProcessBuilderPage.tsx(154,54): error TS2322: Type 'string[]' is not assignable to type 'string'.
+src/pages/processes/ProcessBuilderPage.tsx(155,45): error TS2322: Type '(e: SelectChangeEvent<string[]>) => void' is not assignable to type '(event: ChangeEvent<Omit<HTMLInputElement, "value"> & { value: string; }, Element> | (Event & { target: { value: string; name: string; }; }), child: ReactNode) => void'.
+  Types of parameters 'e' and 'event' are incompatible.
+    Type 'ChangeEvent<Omit<HTMLInputElement, "value"> & { value: string; }, Element> | (Event & { target: { value: string; name: string; }; })' is not assignable to type 'ChangeEvent<HTMLInputElement, Element> | (Event & { target: { value: string[]; name: string; }; })'.
+      Type 'Event & { target: { value: string; name: string; }; }' is not assignable to type 'ChangeEvent<HTMLInputElement, Element> | (Event & { target: { value: string[]; name: string; }; })'.
+        Type 'Event & { target: { value: string; name: string; }; }' is not assignable to type 'Event & { target: { value: string[]; name: string; }; }'.
+          Type 'Event & { target: { value: string; name: string; }; }' is not assignable to type '{ target: { value: string[]; name: string; }; }'.
+            The types of 'target.value' are incompatible between these types.
+              Type 'string' is not assignable to type 'string[]'.
+src/pages/processes/ProcessBuilderPage.tsx(158,63): error TS2339: Property 'map' does not exist on type 'string'.
+src/pages/processes/ProcessBuilderPage.tsx(158,67): error TS7006: Parameter 'id' implicitly has an 'any' type.
+src/pages/processes/ProcessBuilderPage.tsx(249,14): error TS2304: Cannot find name 'AppBar'.
+src/pages/processes/ProcessBuilderPage.tsx(250,18): error TS2552: Cannot find name 'Toolbar'. Did you mean 'toolbar'?
+src/pages/processes/ProcessBuilderPage.tsx(257,19): error TS2552: Cannot find name 'Toolbar'. Did you mean 'toolbar'?
+src/pages/processes/ProcessBuilderPage.tsx(258,15): error TS2304: Cannot find name 'AppBar'.
+src/pages/tasks/TaskDetailsPage.tsx(9,14): error TS6133: 'ApproveIcon' is declared but its value is never read.
+src/pages/tasks/TaskDetailsPage.tsx(11,18): error TS6133: 'SubmitIcon' is declared but its value is never read.
+src/pages/tasks/TaskDetailsPage.tsx(13,16): error TS6133: 'HistoryIcon' is declared but its value is never read.
+src/pages/tasks/TaskDetailsPage.tsx(43,11): error TS6133: 'isRequester' is declared but its value is never read.
+src/store/directoryStore.ts(4,10): error TS1484: 'User' is a type and must be imported using a type-only import when 'verbatimModuleSyntax' is enabled.
+src/store/directoryStore.ts(4,16): error TS1484: 'Department' is a type and must be imported using a type-only import when 'verbatimModuleSyntax' is enabled.
+src/store/directoryStore.ts(4,28): error TS1484: 'Role' is a type and must be imported using a type-only import when 'verbatimModuleSyntax' is enabled.
+src/store/formStore.ts(4,21): error TS6196: 'Section' is declared but never used.
+src/store/processStore.ts(4,24): error TS6196: 'Stage' is declared but never used.
+src/utils/rules.ts(5,21): error TS6196: 'ApproverSelector' is declared but never used.
+src/utils/rules.ts(5,39): error TS6196: 'ApproverSelectorType' is declared but never used.
+src/utils/rules.ts(30,11): error TS6133: 'requesterUserId' is declared but its value is never read.
