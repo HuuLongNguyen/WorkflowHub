@@ -94,11 +94,8 @@ VITE_SUPABASE_ANON_KEY=your_supabase_anon_public_key
 ### Form Builder
 ![Form Builder](./docs/screenshots/form-builder.png)
 
-### Workflow Designer with Conditional Branching
-![Workflow Designer](./docs/screenshots/workflow-designer.png)
-
 ### User Portal
-![User Portal](./docs/screenshots/user-portal.png)
+![User Portal](./docs/screenshots/request-portal.png)
 
 ---
 
