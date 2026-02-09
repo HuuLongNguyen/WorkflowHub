@@ -284,11 +284,16 @@ const TaskDetailPage: React.FC = () => {
                             {form.sections.map((section, idx) => (
                                 <div key={section.id} className="space-y-4">
                                     <h2 className="text-lg font-semibold">{section.title}</h2>
-                                    <div className="space-y-4">
-                                        {section.columns.flatMap(col => col.fieldIds).map(fieldId => {
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        {section.fieldIds?.map(fieldId => {
                                             const field = form.fieldsById[fieldId];
                                             if (!field) return null;
-                                            return <div key={fieldId}>{renderField(field)}</div>;
+                                            const colSpan = (field.colSpan || 1) === 2 ? 'md:col-span-2' : 'md:col-span-1';
+                                            return (
+                                                <div key={fieldId} className={colSpan}>
+                                                    {renderField(field)}
+                                                </div>
+                                            );
                                         })}
                                     </div>
                                     {idx < form.sections.length - 1 && <Divider className="my-6" />}

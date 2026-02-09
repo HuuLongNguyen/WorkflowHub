@@ -42,59 +42,65 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
         const editable = !readOnly && canEditField(field, stageKey, actorUserId, currentStageApprovers);
         const required = isFieldRequired(field, stageKey);
 
+        const colSpan = field.colSpan || 1;
+        // In MUI Grid v2, 12 columns. Span 1 (half) = 6, Span 2 (full) = 12.
+        const gridXs = colSpan === 2 ? 12 : 6;
+
         return (
-            <Box key={field.id} sx={{ mb: 2 }}>
-                <Controller
-                    name={field.key}
-                    control={methods.control}
-                    render={({ field: { onChange, value, ref }, fieldState: { error } }) => (
-                        <>
-                            {field.type === 'checkbox' ? (
-                                <FormControlLabel
-                                    control={
-                                        <Checkbox
-                                            checked={!!value}
-                                            onChange={e => onChange(e.target.checked)}
-                                            disabled={!editable}
-                                        />
-                                    }
-                                    label={field.label + (required ? ' *' : '')}
-                                />
-                            ) : field.type === 'textarea' ? (
-                                <TextField
-                                    fullWidth multiline rows={3}
-                                    label={field.label}
-                                    value={value || ''}
-                                    onChange={onChange}
-                                    inputRef={ref}
-                                    error={!!error}
-                                    helperText={error?.message || field.helpText}
-                                    disabled={!editable}
-                                    required={required}
-                                />
-                            ) : (
-                                <TextField
-                                    fullWidth
-                                    label={field.label}
-                                    type={field.type === 'number' ? 'number' : 'text'}
-                                    value={value || ''}
-                                    onChange={onChange}
-                                    inputRef={ref}
-                                    error={!!error}
-                                    helperText={error?.message || field.helpText}
-                                    disabled={!editable}
-                                    required={required}
-                                    select={field.type === 'select'}
-                                >
-                                    {field.type === 'select' && field.options?.map(opt => (
-                                        <MenuItem key={opt.id} value={opt.value}>{opt.label}</MenuItem>
-                                    ))}
-                                </TextField>
-                            )}
-                        </>
-                    )}
-                />
-            </Box>
+            <Grid size={{ xs: 12, md: gridXs }} key={field.id}>
+                <Box sx={{ mb: 2 }}>
+                    <Controller
+                        name={field.key}
+                        control={methods.control}
+                        render={({ field: { onChange, value, ref }, fieldState: { error } }) => (
+                            <>
+                                {field.type === 'checkbox' ? (
+                                    <FormControlLabel
+                                        control={
+                                            <Checkbox
+                                                checked={!!value}
+                                                onChange={e => onChange(e.target.checked)}
+                                                disabled={!editable}
+                                            />
+                                        }
+                                        label={field.label + (required ? ' *' : '')}
+                                    />
+                                ) : field.type === 'textarea' ? (
+                                    <TextField
+                                        fullWidth multiline rows={3}
+                                        label={field.label}
+                                        value={value || ''}
+                                        onChange={onChange}
+                                        inputRef={ref}
+                                        error={!!error}
+                                        helperText={error?.message || field.helpText}
+                                        disabled={!editable}
+                                        required={required}
+                                    />
+                                ) : (
+                                    <TextField
+                                        fullWidth
+                                        label={field.label}
+                                        type={field.type === 'number' ? 'number' : 'text'}
+                                        value={value || ''}
+                                        onChange={onChange}
+                                        inputRef={ref}
+                                        error={!!error}
+                                        helperText={error?.message || field.helpText}
+                                        disabled={!editable}
+                                        required={required}
+                                        select={field.type === 'select'}
+                                    >
+                                        {field.type === 'select' && field.options?.map(opt => (
+                                            <MenuItem key={opt.id} value={opt.value}>{opt.label}</MenuItem>
+                                        ))}
+                                    </TextField>
+                                )}
+                            </>
+                        )}
+                    />
+                </Box>
+            </Grid>
         );
     };
 
@@ -105,15 +111,11 @@ export const FormRenderer: React.FC<FormRendererProps> = ({
                     <Paper key={section.id} sx={{ p: 3, mb: 3 }} variant="outlined">
                         <Typography variant="h6" gutterBottom>{section.title}</Typography>
                         {section.description && <Typography variant="body2" color="text.secondary" paragraph>{section.description}</Typography>}
-                        <Grid container spacing={4}>
-                            {section.columns.map(column => (
-                                <Grid size={{ xs: 12, md: 12 / section.columns.length }} key={column.id}>
-                                    {column.fieldIds.map(fid => {
-                                        const field = form.fieldsById[fid];
-                                        return field ? renderField(field) : null;
-                                    })}
-                                </Grid>
-                            ))}
+                        <Grid container spacing={3}>
+                            {section.fieldIds?.map(fid => {
+                                const field = form.fieldsById[fid];
+                                return field ? renderField(field) : null;
+                            })}
                         </Grid>
                     </Paper>
                 ))}

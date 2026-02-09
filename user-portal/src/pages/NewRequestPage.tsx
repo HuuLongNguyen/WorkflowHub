@@ -21,6 +21,7 @@ import { usePortalStore } from '../store/portalStore';
 import { portalService } from '../services/portalService';
 import { resolveApprovers, canViewField, canEditField, isFieldRequired } from '../utils/rules';
 import type { Task, Field } from '../types';
+import { ProcessStagePreview } from '../components/ProcessStagePreview';
 
 const NewRequestPage: React.FC = () => {
     const { formId } = useParams<{ formId: string }>();
@@ -252,7 +253,7 @@ const NewRequestPage: React.FC = () => {
     };
 
     return (
-        <div className="max-w-3xl mx-auto">
+        <div className="max-w-7xl mx-auto px-4">
             <Button
                 variant="light"
                 onPress={() => navigate('/')}
@@ -261,56 +262,77 @@ const NewRequestPage: React.FC = () => {
                 ← Back to Home
             </Button>
 
-            <Card className="shadow-lg">
-                <CardHeader className="flex flex-col items-start gap-2 pb-0">
-                    <h1 className="text-2xl sm:text-3xl font-bold">{form.name}</h1>
-                    {process && (
-                        <div className="flex items-center gap-2 text-default-500">
-                            <span>Workflow: {process.name}</span>
-                            <Chip size="sm" variant="flat">{process.stages.length} stages</Chip>
-                        </div>
-                    )}
-                </CardHeader>
-                <Divider className="my-4" />
-                <CardBody className="gap-6">
-                    {error && (
-                        <div className="bg-danger-50 text-danger p-3 rounded-lg text-sm">
-                            {error}
-                        </div>
-                    )}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+                {/* Main Form Area */}
+                <div className="lg:col-span-2">
+                    <Card className="shadow-lg">
+                        <CardHeader className="flex flex-col items-start gap-2 pb-0">
+                            <h1 className="text-2xl sm:text-3xl font-bold">{form.name}</h1>
+                            {process && (
+                                <div className="flex items-center gap-2 text-default-500">
+                                    <span>Workflow: {process.name}</span>
+                                    <Chip size="sm" variant="flat">{process.stages.length} stages</Chip>
+                                </div>
+                            )}
+                        </CardHeader>
+                        <Divider className="my-4" />
+                        <CardBody className="gap-6">
+                            {error && (
+                                <div className="bg-danger-50 text-danger p-3 rounded-lg text-sm">
+                                    {error}
+                                </div>
+                            )}
 
-                    {form.sections.map((section, sectionIdx) => (
-                        <div key={section.id} className="space-y-4">
-                            <div>
-                                <h2 className="text-lg font-semibold">{section.title}</h2>
-                                {section.description && (
-                                    <p className="text-small text-default-500">{section.description}</p>
-                                )}
-                            </div>
-                            <div className="space-y-4">
-                                {section.columns.flatMap(col => col.fieldIds).map(fieldId => {
-                                    const field = form.fieldsById[fieldId];
-                                    if (!field) return null;
-                                    return <div key={fieldId}>{renderField(field)}</div>;
-                                })}
-                            </div>
-                            {sectionIdx < form.sections.length - 1 && <Divider className="my-6" />}
-                        </div>
-                    ))}
+                            {form.sections.map((section, sectionIdx) => (
+                                <div key={section.id} className="space-y-4">
+                                    <div>
+                                        <h2 className="text-lg font-semibold">{section.title}</h2>
+                                        {section.description && (
+                                            <p className="text-small text-default-500">{section.description}</p>
+                                        )}
+                                    </div>
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                        {section.fieldIds?.map(fieldId => {
+                                            const field = form.fieldsById[fieldId];
+                                            if (!field) return null;
+                                            const colSpanClass = (field.colSpan || 1) === 2 ? 'md:col-span-2' : 'md:col-span-1';
+                                            return (
+                                                <div key={fieldId} className={colSpanClass}>
+                                                    {renderField(field)}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                    {sectionIdx < form.sections.length - 1 && <Divider className="my-6" />}
+                                </div>
+                            ))}
 
-                    <div className="flex justify-end pt-4">
-                        <Button
-                            color="primary"
-                            size="lg"
-                            isLoading={submitting}
-                            onPress={handleSubmit}
-                            isDisabled={!currentUser}
-                        >
-                            {submitting ? 'Submitting...' : 'Submit Request'}
-                        </Button>
-                    </div>
-                </CardBody>
-            </Card>
+                            <div className="flex justify-end pt-4">
+                                <Button
+                                    color="primary"
+                                    size="lg"
+                                    isLoading={submitting}
+                                    onPress={handleSubmit}
+                                    isDisabled={!currentUser}
+                                >
+                                    {submitting ? 'Submitting...' : 'Submit Request'}
+                                </Button>
+                            </div>
+                        </CardBody>
+                    </Card>
+                </div>
+
+                {/* Sidebar: Workflow Preview */}
+                <div className="lg:col-span-1 sticky top-6">
+                    {process && currentUser && (
+                        <ProcessStagePreview
+                            process={process}
+                            requesterUserId={currentUser.id}
+                            requesterDepartmentId={currentUser.departmentId}
+                        />
+                    )}
+                </div>
+            </div>
         </div>
     );
 };

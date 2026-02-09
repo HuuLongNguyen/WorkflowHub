@@ -82,19 +82,14 @@ export interface Field {
     defaultValue?: any;
     options?: FieldOption[];
     rulesByStage: Record<string, FieldStageRule>; // key is stageKey
-}
-
-export interface Column {
-    id: string;
-    width: number;
-    fieldIds: string[];
+    colSpan?: number; // 1 (50%) or 2 (100%)
 }
 
 export interface Section {
     id: string;
     title: string;
     description?: string;
-    columns: Column[];
+    fieldIds: string[];
 }
 
 export interface Form {

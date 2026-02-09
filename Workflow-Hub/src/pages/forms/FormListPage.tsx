@@ -34,9 +34,9 @@ const FormListPage: React.FC = () => {
             processId: processes[0]?.id || '', // Link to first process by default
             sections: [
                 {
-                    id: `sec_1`,
+                    id: uuidv4(),
                     title: 'General Information',
-                    columns: [{ id: 'col_1', width: 100, fieldIds: [] }]
+                    fieldIds: []
                 }
             ],
             fieldsById: {},

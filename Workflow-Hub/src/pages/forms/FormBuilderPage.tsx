@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import {
     Box, Typography, Button, Stack, Paper, TextField, Divider,
@@ -23,7 +24,8 @@ import {
     AttachFile as FileIcon,
     Visibility as VisibleIcon,
     Edit as EditIcon,
-    CheckCircle as RequiredIcon
+    CheckCircle as RequiredIcon,
+    DragIndicator as DragIcon
 } from '@mui/icons-material';
 import { v4 as uuidv4 } from 'uuid';
 import { useParams, useNavigate, Link } from 'react-router-dom';
@@ -31,6 +33,96 @@ import { useFormStore } from '../../store/formStore';
 import { useProcessStore } from '../../store/processStore';
 import { supabaseService } from '../../services/supabaseService';
 import type { Form, Section, Field, FieldType, FieldStageRule } from '../../types';
+import {
+    DndContext,
+    closestCenter,
+    KeyboardSensor,
+    PointerSensor,
+    useSensor,
+    useSensors,
+    DragOverlay,
+    type DragStartEvent,
+    type DragEndEvent,
+    type DragOverEvent
+} from '@dnd-kit/core';
+import {
+    arrayMove,
+    SortableContext,
+    sortableKeyboardCoordinates,
+    verticalListSortingStrategy,
+    useSortable
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+
+// Helper components
+const ListItemIcon = ({ children, sx }: any) => <Box sx={sx}>{children}</Box>;
+const ListItemText = ({ children, sx }: any) => <Box sx={sx}>{children}</Box>;
+const Chip = ({ label, sx }: any) => <Box sx={{ ...sx, bgcolor: 'action.hover', px: 1, borderRadius: 1, display: 'inline-flex', alignItems: 'center', fontSize: '0.75rem' }}>{label}</Box>;
+const TableContainer = ({ children, component, variant }: any) => <Box component={component} sx={{ border: variant === 'outlined' ? '1px solid' : 'none', borderColor: 'divider', borderRadius: 1, overflow: 'hidden' }}>{children}</Box>;
+
+// Sortable Field Component
+const SortableField = ({
+    field,
+    onDelete,
+    onEdit
+}: {
+    field: Field,
+    onDelete: () => void,
+    onEdit: () => void
+}) => {
+    const {
+        attributes,
+        listeners,
+        setNodeRef,
+        transform,
+        transition,
+        isDragging
+    } = useSortable({ id: field.id });
+
+    const style = {
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.5 : 1,
+    };
+
+    const fieldIcons: Record<string, any> = {
+        text: <TextIcon fontSize="small" />,
+        number: <NumberIcon fontSize="small" />,
+        date: <DateIcon fontSize="small" />,
+        select: <SelectIcon fontSize="small" />,
+        checkbox: <CheckboxIcon fontSize="small" />,
+        radio: <RadioIcon fontSize="small" />,
+        people: <PeopleIcon fontSize="small" />,
+        attachment: <FileIcon fontSize="small" />
+    };
+
+    const widthLabel = (field.colSpan || 1) === 2 ? "100%" : "50%";
+    const gridXs = (field.colSpan || 1) === 2 ? 12 : 6;
+
+    return (
+        <Grid size={{ xs: 12, md: gridXs }} ref={setNodeRef} style={style} {...attributes}>
+            <Paper variant="outlined" sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 2, borderLeft: '4px solid', borderColor: 'primary.main', position: 'relative' }}>
+                <IconButton size="small" sx={{ cursor: 'grab' }} {...listeners}>
+                    <DragIcon fontSize="small" />
+                </IconButton>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexGrow: 1 }}>
+                    {fieldIcons[field.type] || <TextIcon fontSize="small" />}
+                    <Box>
+                        <Stack direction="row" alignItems="center" spacing={1}>
+                            <Typography variant="body2" fontWeight="700">{field.label}</Typography>
+                            <Chip size="small" label={widthLabel} sx={{ height: 16, fontSize: '0.65rem' }} />
+                        </Stack>
+                        <Typography variant="caption" color="text.secondary">{field.type} • {field.key}</Typography>
+                    </Box>
+                </Box>
+                <Stack direction="row" spacing={1}>
+                    <IconButton size="small" onClick={onEdit}><SettingsIcon fontSize="inherit" /></IconButton>
+                    <IconButton size="small" color="error" onClick={onDelete}><DeleteIcon fontSize="inherit" /></IconButton>
+                </Stack>
+            </Paper>
+        </Grid>
+    );
+};
 
 const FormBuilderPage: React.FC = () => {
     const { id } = useParams();
@@ -42,12 +134,30 @@ const FormBuilderPage: React.FC = () => {
     const initialForm = forms.find(f => f.id === id);
     const [formName, setFormName] = useState(initialForm?.name || '');
     const [processId, setProcessId] = useState(initialForm?.processId || '');
-    const [sections, setSections] = useState<Section[]>(initialForm?.sections || []);
+    const [sections, setSections] = useState<Section[]>(() => {
+        if (!initialForm) return [];
+        return initialForm.sections.map(s => {
+            // Migration: if fieldIds is missing, try to exract from columns (legacy)
+            if (!s.fieldIds && (s as any).columns) {
+                const legacyFieldIds = (s as any).columns.flatMap((c: any) => c.fieldIds);
+                return { ...s, fieldIds: legacyFieldIds || [] };
+            }
+            return { ...s, fieldIds: s.fieldIds || [] };
+        });
+    });
     const [fieldsById, setFieldsById] = useState<Record<string, Field>>(initialForm?.fieldsById || {});
 
     // Editor State
-    const [anchorEl, setAnchorEl] = useState<{ el: HTMLElement, sectionId: string, columnId: string } | null>(null);
+    const [anchorEl, setAnchorEl] = useState<{ el: HTMLElement, sectionId: string } | null>(null);
     const [editingFieldId, setEditingFieldId] = useState<string | null>(null);
+    const [activeId, setActiveId] = useState<string | null>(null);
+
+    const sensors = useSensors(
+        useSensor(PointerSensor),
+        useSensor(KeyboardSensor, {
+            coordinateGetter: sortableKeyboardCoordinates,
+        })
+    );
 
     if (!initialForm) return <Typography>Form not found</Typography>;
 
@@ -66,7 +176,7 @@ const FormBuilderPage: React.FC = () => {
 
         try {
             updateForm(initialForm.id, updatedForm);
-            await supabaseService.saveForm(updatedForm);
+            await supabaseService.saveForm(updatedForm); // Fire and forget
             navigate('/forms');
         } catch (err: any) {
             console.error('Failed to sync form to Supabase:', err);
@@ -78,7 +188,7 @@ const FormBuilderPage: React.FC = () => {
         const newSection: Section = {
             id: uuidv4(),
             title: `New Section ${sections.length + 1}`,
-            columns: [{ id: uuidv4(), width: 100, fieldIds: [] }]
+            fieldIds: []
         };
         setSections([...sections, newSection]);
     };
@@ -87,7 +197,7 @@ const FormBuilderPage: React.FC = () => {
         setSections(sections.filter(s => s.id !== sectionId));
     };
 
-    const handleAddField = (type: FieldType, sectionId: string, columnId: string) => {
+    const handleAddField = (type: FieldType, sectionId: string) => {
         const fieldId = uuidv4();
         const newField: Field = {
             id: fieldId,
@@ -95,37 +205,27 @@ const FormBuilderPage: React.FC = () => {
             label: `New ${type.charAt(0).toUpperCase() + type.slice(1)} Field`,
             type,
             requiredDefault: false,
-            rulesByStage: {}
+            rulesByStage: {},
+            colSpan: 1 // Default to half width
         };
 
         setFieldsById({ ...fieldsById, [fieldId]: newField });
 
         setSections(sections.map(s => {
             if (s.id !== sectionId) return s;
-            return {
-                ...s,
-                columns: s.columns.map(c => {
-                    if (c.id !== columnId) return c;
-                    return { ...c, fieldIds: [...c.fieldIds, fieldId] };
-                })
-            };
+            return { ...s, fieldIds: [...s.fieldIds, fieldId] };
         }));
         setAnchorEl(null);
     };
 
-    const handleDeleteField = (fieldId: string, sectionId: string, columnId: string) => {
+    const handleDeleteField = (fieldId: string, sectionId: string) => {
         setSections(sections.map(s => {
             if (s.id !== sectionId) return s;
             return {
                 ...s,
-                columns: s.columns.map(c => {
-                    if (c.id !== columnId) return c;
-                    return { ...c, fieldIds: c.fieldIds.filter(id => id !== fieldId) };
-                })
+                fieldIds: s.fieldIds.filter(id => id !== fieldId)
             };
         }));
-        // Note: Field remains in fieldsById to avoid data loss if removed from column but referenced elsewhere, 
-        // though in this simple impl we could delete it.
     };
 
     const updateFieldRule = (stageKey: string, updates: Partial<FieldStageRule>) => {
@@ -143,6 +243,74 @@ const FormBuilderPage: React.FC = () => {
                 }
             }
         });
+    };
+
+    const handleDragStart = (event: DragStartEvent) => {
+        setActiveId(event.active.id as string);
+    };
+
+    const handleDragOver = (event: DragOverEvent) => {
+        const { active, over } = event;
+        if (!over) return;
+
+        const activeId = active.id as string;
+        const overId = over.id as string;
+
+        // Find source and destination sections
+        const sourceSection = sections.find(s => s.fieldIds?.includes(activeId));
+        const destSection = sections.find(s => s.fieldIds?.includes(overId));
+
+        if (!sourceSection || !destSection) return;
+
+        if (sourceSection.id !== destSection.id) {
+            // Moving between sections
+            setSections(prev => {
+                const newSections = [...prev];
+                const sIdx = newSections.findIndex(s => s.id === sourceSection.id);
+                const dIdx = newSections.findIndex(s => s.id === destSection.id);
+
+                const sSection = { ...newSections[sIdx] };
+                const dSection = { ...newSections[dIdx] }; // Clone
+
+                sSection.fieldIds = sSection.fieldIds.filter(id => id !== activeId);
+                const overIndex = dSection.fieldIds.indexOf(overId);
+
+                // Insert at new position
+                const newFieldIds = [...dSection.fieldIds];
+                newFieldIds.splice(overIndex >= 0 ? overIndex : newFieldIds.length, 0, activeId);
+                dSection.fieldIds = newFieldIds;
+
+                newSections[sIdx] = sSection;
+                newSections[dIdx] = dSection;
+
+                return newSections;
+            });
+        }
+    };
+
+    const handleDragEnd = (event: DragEndEvent) => {
+        const { active, over } = event;
+        setActiveId(null);
+        if (!over) return;
+
+        const activeId = active.id as string;
+        const overId = over.id as string;
+
+        const section = sections.find(s => s.fieldIds?.includes(activeId));
+        if (section) {
+            const oldIndex = section.fieldIds.indexOf(activeId);
+            const newIndex = section.fieldIds.indexOf(overId);
+
+            if (oldIndex !== newIndex) {
+                setSections(prev => prev.map(s => {
+                    if (s.id !== section.id) return s;
+                    return {
+                        ...s,
+                        fieldIds: arrayMove(s.fieldIds, oldIndex, newIndex)
+                    };
+                }));
+            }
+        }
     };
 
     const fieldIcons: Record<string, any> = {
@@ -178,106 +346,119 @@ const FormBuilderPage: React.FC = () => {
                 </Toolbar>
             </AppBar>
 
-            <Box sx={{ mt: 2, flexGrow: 1, display: 'flex', overflow: 'hidden' }}>
-                {/* Left Panel */}
-                <Paper sx={{ width: 280, p: 2, borderRight: '1px solid', borderColor: 'divider', display: 'flex', flexDirection: 'column', gap: 3 }}>
-                    <Box>
-                        <Typography variant="subtitle2" fontWeight="800" color="text.secondary" gutterBottom>PALETTE</Typography>
-                        <Typography variant="caption" color="text.secondary" paragraph>Click "Add" in a column to place these</Typography>
-                        <Grid container spacing={1}>
-                            {["text", "number", "date", "select", "checkbox", "radio", "people", "attachment"].map(type => (
-                                <Grid size={{ xs: 6 }} key={type}>
-                                    <Paper
-                                        variant="outlined"
-                                        sx={{ p: 1, textAlign: 'center', bgcolor: 'background.default', opacity: 0.8 }}
-                                    >
-                                        <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
-                                            {fieldIcons[type]}
-                                            <Typography variant="caption" sx={{ mt: 0.5, fontWeight: 700 }}>{type.toUpperCase()}</Typography>
-                                        </Box>
-                                    </Paper>
-                                </Grid>
-                            ))}
-                        </Grid>
-                    </Box>
-                    <Divider />
-                    <Box>
-                        <Typography variant="subtitle2" fontWeight="800" color="text.secondary" gutterBottom>ACTIONS</Typography>
-                        <Button fullWidth variant="contained" startIcon={<SectionIcon />} onClick={handleAddSection} sx={{ mb: 1 }}>
-                            Add Section
-                        </Button>
-                    </Box>
-                </Paper>
-
-                {/* Main Canvas */}
-                <Box sx={{ flexGrow: 1, p: 4, overflowY: 'auto', bgcolor: 'grey.50' }}>
-                    <Paper sx={{ maxWidth: 900, mx: 'auto', p: 4, minHeight: '100%', borderRadius: 2 }}>
-                        <Typography variant="h5" align="center" gutterBottom fontWeight="900" sx={{ mb: 4 }}>{formName || 'Untitled Form'}</Typography>
-
-                        <Stack spacing={4}>
-                            {sections.map(section => (
-                                <Card key={section.id} variant="outlined" sx={{ position: 'relative', '&:hover .section-actions': { opacity: 1 } }}>
-                                    <CardHeader
-                                        title={<TextField fullWidth size="small" value={section.title} onChange={e => {
-                                            setSections(sections.map(s => s.id === section.id ? { ...s, title: e.target.value } : s));
-                                        }} sx={{ '& .MuiInputBase-input': { fontWeight: 700 } }} />}
-                                        action={
-                                            <IconButton color="error" size="small" onClick={() => handleDeleteSection(section.id)} className="section-actions" sx={{ opacity: 0.3, transition: '0.2s' }}>
-                                                <DeleteIcon fontSize="small" />
-                                            </IconButton>
-                                        }
-                                        sx={{ bgcolor: 'action.hover', py: 1 }}
-                                    />
-                                    <CardContent>
-                                        <Grid container spacing={2}>
-                                            {section.columns.map(column => (
-                                                <Grid size={{ xs: 12 }} key={column.id}>
-                                                    <Stack spacing={2}>
-                                                        {column.fieldIds.map(fid => {
-                                                            const field = fieldsById[fid];
-                                                            if (!field) return null;
-                                                            return (
-                                                                <Paper key={fid} variant="outlined" sx={{ p: 2, display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderLeft: '4px solid', borderColor: 'primary.main' }}>
-                                                                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                                                                        {fieldIcons[field.type]}
-                                                                        <Box>
-                                                                            <Typography variant="body2" fontWeight="700">{field.label}</Typography>
-                                                                            <Typography variant="caption" color="text.secondary">{field.type} • {field.key}</Typography>
-                                                                        </Box>
-                                                                    </Box>
-                                                                    <Stack direction="row" spacing={1}>
-                                                                        <IconButton size="small" onClick={() => setEditingFieldId(fid)}><SettingsIcon fontSize="inherit" /></IconButton>
-                                                                        <IconButton size="small" color="error" onClick={() => handleDeleteField(fid, section.id, column.id)}><DeleteIcon fontSize="inherit" /></IconButton>
-                                                                    </Stack>
-                                                                </Paper>
-                                                            );
-                                                        })}
-                                                        <Button
-                                                            fullWidth variant="outlined"
-                                                            startIcon={<AddIcon />}
-                                                            onClick={(e) => setAnchorEl({ el: e.currentTarget, sectionId: section.id, columnId: column.id })}
-                                                            sx={{ border: '1px dashed', borderColor: 'divider', py: 1.5 }}
-                                                        >
-                                                            Add Field
-                                                        </Button>
-                                                    </Stack>
-                                                </Grid>
-                                            ))}
-                                        </Grid>
-                                    </CardContent>
-                                </Card>
-                            ))}
-                        </Stack>
-
-                        {sections.length === 0 && (
-                            <Box sx={{ textAlign: 'center', py: 8, opacity: 0.5 }}>
-                                <SectionIcon sx={{ fontSize: 48, mb: 2 }} />
-                                <Typography>No sections yet. Click "Add Section" to begin.</Typography>
-                            </Box>
-                        )}
+            <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragStart={handleDragStart}
+                onDragOver={handleDragOver}
+                onDragEnd={handleDragEnd}
+            >
+                <Box sx={{ mt: 2, flexGrow: 1, display: 'flex', overflow: 'hidden' }}>
+                    {/* Left Panel */}
+                    <Paper sx={{ width: 280, p: 2, borderRight: '1px solid', borderColor: 'divider', display: 'flex', flexDirection: 'column', gap: 3 }}>
+                        <Box>
+                            <Typography variant="subtitle2" fontWeight="800" color="text.secondary" gutterBottom>PALETTE</Typography>
+                            <Typography variant="caption" color="text.secondary" paragraph>Click "Add Field" in a section to use these</Typography>
+                            <Grid container spacing={1}>
+                                {["text", "number", "date", "select", "checkbox", "radio", "people", "attachment"].map(type => (
+                                    <Grid size={{ xs: 6 }} key={type}>
+                                        <Paper
+                                            variant="outlined"
+                                            sx={{ p: 1, textAlign: 'center', bgcolor: 'background.default', opacity: 0.8 }}
+                                        >
+                                            <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                                                {fieldIcons[type]}
+                                                <Typography variant="caption" sx={{ mt: 0.5, fontWeight: 700 }}>{type.toUpperCase()}</Typography>
+                                            </Box>
+                                        </Paper>
+                                    </Grid>
+                                ))}
+                            </Grid>
+                        </Box>
+                        <Divider />
+                        <Box>
+                            <Typography variant="subtitle2" fontWeight="800" color="text.secondary" gutterBottom>ACTIONS</Typography>
+                            <Button fullWidth variant="contained" startIcon={<SectionIcon />} onClick={handleAddSection} sx={{ mb: 1 }}>
+                                Add Section
+                            </Button>
+                        </Box>
                     </Paper>
+
+                    {/* Main Canvas */}
+                    <Box sx={{ flexGrow: 1, p: 4, overflowY: 'auto', bgcolor: 'grey.50' }}>
+                        <Paper sx={{ maxWidth: 900, mx: 'auto', p: 4, minHeight: '100%', borderRadius: 2 }}>
+                            <Typography variant="h5" align="center" gutterBottom fontWeight="900" sx={{ mb: 4 }}>{formName || 'Untitled Form'}</Typography>
+
+                            <Stack spacing={4}>
+                                {sections.map(section => (
+                                    <Card key={section.id} variant="outlined" sx={{ position: 'relative', '&:hover .section-actions': { opacity: 1 } }}>
+                                        <CardHeader
+                                            title={<TextField fullWidth size="small" value={section.title} onChange={e => {
+                                                setSections(sections.map(s => s.id === section.id ? { ...s, title: e.target.value } : s));
+                                            }} sx={{ '& .MuiInputBase-input': { fontWeight: 700 } }} />}
+                                            action={
+                                                <IconButton color="error" size="small" onClick={() => handleDeleteSection(section.id)} className="section-actions" sx={{ opacity: 0.3, transition: '0.2s' }}>
+                                                    <DeleteIcon fontSize="small" />
+                                                </IconButton>
+                                            }
+                                            sx={{ bgcolor: 'action.hover', py: 1 }}
+                                        />
+                                        <CardContent>
+                                            <SortableContext
+                                                id={section.id}
+                                                items={section.fieldIds}
+                                                strategy={verticalListSortingStrategy}
+                                            >
+                                                <Grid container spacing={2}>
+                                                    {(section.fieldIds || []).map(fid => {
+                                                        const field = fieldsById[fid];
+                                                        if (!field) return null;
+                                                        return <SortableField
+                                                            key={fid}
+                                                            field={field}
+                                                            onDelete={() => handleDeleteField(fid, section.id)}
+                                                            onEdit={() => setEditingFieldId(fid)}
+                                                        />;
+                                                    })}
+                                                </Grid>
+                                            </SortableContext>
+
+                                            <Button
+                                                fullWidth variant="outlined"
+                                                startIcon={<AddIcon />}
+                                                onClick={(e) => setAnchorEl({ el: e.currentTarget, sectionId: section.id })}
+                                                sx={{ mt: 2, border: '1px dashed', borderColor: 'divider', py: 1.5 }}
+                                            >
+                                                Add Field (Select Type Below)
+                                            </Button>
+                                        </CardContent>
+                                    </Card>
+                                ))}
+                            </Stack>
+
+                            {sections.length === 0 && (
+                                <Box sx={{ textAlign: 'center', py: 8, opacity: 0.5 }}>
+                                    <SectionIcon sx={{ fontSize: 48, mb: 2 }} />
+                                    <Typography>No sections yet. Click "Add Section" to begin.</Typography>
+                                </Box>
+                            )}
+                        </Paper>
+                    </Box>
                 </Box>
-            </Box>
+
+                <DragOverlay>
+                    {activeId && fieldsById[activeId] ? (
+                        <Paper variant="outlined" sx={{ p: 2, display: 'flex', alignItems: 'center', gap: 2, borderLeft: '4px solid', borderColor: 'primary.main', width: 300 }}>
+                            <DragIcon fontSize="small" />
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2, flexGrow: 1 }}>
+                                {fieldIcons[fieldsById[activeId].type]}
+                                <Typography variant="body2" fontWeight="700">{fieldsById[activeId].label}</Typography>
+                            </Box>
+                        </Paper>
+                    ) : null}
+                </DragOverlay>
+
+            </DndContext>
 
             {/* Field Type Selection Menu */}
             <Menu
@@ -286,7 +467,7 @@ const FormBuilderPage: React.FC = () => {
                 onClose={() => setAnchorEl(null)}
             >
                 {["text", "number", "date", "select", "checkbox", "radio", "people", "attachment"].map(type => (
-                    <MenuItem key={type} onClick={() => anchorEl && handleAddField(type as FieldType, anchorEl.sectionId, anchorEl.columnId)}>
+                    <MenuItem key={type} onClick={() => anchorEl && handleAddField(type as FieldType, anchorEl.sectionId)}>
                         <ListItemIcon sx={{ minWidth: 36 }}>{fieldIcons[type]}</ListItemIcon>
                         <ListItemText sx={{ '& .MuiTypography-root': { textTransform: 'capitalize' } }}>{type}</ListItemText>
                     </MenuItem>
@@ -316,6 +497,28 @@ const FormBuilderPage: React.FC = () => {
                                         value={editingField.key}
                                         onChange={e => setFieldsById({ ...fieldsById, [editingField.id]: { ...editingField, key: e.target.value } })}
                                     />
+                                </Grid>
+                                <Grid size={{ xs: 12 }}>
+                                    <Divider textAlign="left">Layout Settings</Divider>
+                                    <Stack direction="row" spacing={2} sx={{ mt: 2 }} alignItems="center">
+                                        <Typography variant="body2">Width:</Typography>
+                                        <Stack direction="row" spacing={1}>
+                                            <Button
+                                                variant={editingField.colSpan === 1 ? 'contained' : 'outlined'}
+                                                size="small"
+                                                onClick={() => setFieldsById({ ...fieldsById, [editingField.id]: { ...editingField, colSpan: 1 } })}
+                                            >
+                                                50% (Half)
+                                            </Button>
+                                            <Button
+                                                variant={(editingField.colSpan || 1) === 2 ? 'contained' : 'outlined'}
+                                                size="small"
+                                                onClick={() => setFieldsById({ ...fieldsById, [editingField.id]: { ...editingField, colSpan: 2 } })}
+                                            >
+                                                100% (Full)
+                                            </Button>
+                                        </Stack>
+                                    </Stack>
                                 </Grid>
                             </Grid>
 
@@ -472,10 +675,5 @@ const FormBuilderPage: React.FC = () => {
         </Box>
     );
 };
-
-// Simple helper components used above
-const ListItemIcon = ({ children, sx }: any) => <Box sx={sx}>{children}</Box>;
-const ListItemText = ({ children, sx }: any) => <Box sx={sx}>{children}</Box>;
-const TableContainer = ({ children, component, variant }: any) => <Box component={component} sx={{ border: variant === 'outlined' ? '1px solid' : 'none', borderColor: 'divider', borderRadius: 1, overflow: 'hidden' }}>{children}</Box>;
 
 export default FormBuilderPage;
