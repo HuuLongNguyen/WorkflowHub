@@ -34,6 +34,17 @@ export interface ApproverSelector {
     dedupe: boolean;
 }
 
+// Conditional Branching Types
+export type ConditionOperator = "EQUALS" | "NOT_EQUALS" | "CONTAINS" | "GREATER_THAN" | "LESS_THAN" | "IS_EMPTY" | "IS_NOT_EMPTY";
+
+export interface StageCondition {
+    id: string;
+    fieldKey: string; // The form field to check
+    operator: ConditionOperator;
+    value: any; // The value to compare against
+    nextStageKey: string; // The stage to route to if condition is true
+}
+
 export interface Stage {
     id: string;
     name: string;
@@ -41,6 +52,11 @@ export interface Stage {
     approverSelectors: ApproverSelector[];
     approvalMode: "ANY_ONE" | "ALL";
     order: number;
+    // Conditional Branching: if empty, goes to next stage in order
+    // if conditions exist, evaluates them and routes accordingly
+    conditions?: StageCondition[];
+    // Default next stage if no conditions match (optional, falls back to order+1)
+    defaultNextStageKey?: string;
 }
 
 export interface Process {

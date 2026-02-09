@@ -87,12 +87,28 @@ VITE_SUPABASE_ANON_KEY=your_supabase_anon_public_key
 
 ---
 
+## 📸 Screenshots
+
+> **Note**: Add screenshots of your Form Builder, Workflow Designer, and User Portal to showcase the UI.
+
+### Form Builder
+![Form Builder](./docs/screenshots/form-builder.png)
+
+### Workflow Designer with Conditional Branching
+![Workflow Designer](./docs/screenshots/workflow-designer.png)
+
+### User Portal
+![User Portal](./docs/screenshots/user-portal.png)
+
+---
+
 ## 🗺️ Roadmap
+- [x] **Conditional Branching in Workflows** ✅ (Implemented!)
 - [ ] Parallel Approval Stages
-- [ ] Conditional Branching in Workflows
 - [ ] Email Notifications via Resend/Postmark
 - [ ] Mobile App (React Native)
 - [ ] Advanced Analytics Dashboard
+- [ ] Webhook Integration for External Systems
 
 ---
 
